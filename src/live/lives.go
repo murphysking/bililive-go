@@ -43,6 +43,7 @@ type InitializingFinishedParam struct {
 type Options struct {
 	Cookies *cookiejar.Jar
 	Quality int
+	NewHevc bool
 }
 
 func NewOptions(opts ...Option) (*Options, error) {
@@ -90,6 +91,12 @@ func WithQuality(quality int) Option {
 	}
 }
 
+func WithNewHevc(newhevc bool) Option {
+	return func(opts *Options) {
+		opts.NewHevc = newhevc
+	}
+}
+
 type ID string
 
 type StreamUrlInfo struct {
@@ -110,17 +117,20 @@ type Live interface {
 	GetLastStartTime() time.Time
 	SetLastStartTime(time.Time)
 	GetHeadersForDownloader() map[string]string
+	GetOptions() *Options
 }
 
 type WrappedLive struct {
 	Live
 	cache gcache.Cache
+	*Options
 }
 
-func newWrappedLive(live Live, cache gcache.Cache) Live {
+func newWrappedLive(live Live, cache gcache.Cache, opts *Options) Live {
 	return &WrappedLive{
-		Live:  live,
-		cache: cache,
+		Live:    live,
+		cache:   cache,
+		Options: opts,
 	}
 }
 
@@ -137,6 +147,14 @@ func (w *WrappedLive) GetInfo() (*Info, error) {
 	}
 	return i, nil
 }
+func (w *WrappedLive) GetOptions() *Options {
+	i := w.Live.GetOptions()
+
+	if w.cache != nil {
+		w.cache.Set(w, i)
+	}
+	return i
+}
 
 func New(url *url.URL, cache gcache.Cache, opts ...Option) (live Live, err error) {
 	builder, ok := getBuilder(url.Host)
@@ -147,7 +165,8 @@ func New(url *url.URL, cache gcache.Cache, opts ...Option) (live Live, err error
 	if err != nil {
 		return
 	}
-	live = newWrappedLive(live, cache)
+	opts1 := MustNewOptions(opts...)
+	live = newWrappedLive(live, cache, opts1)
 	for i := 0; i < 3; i++ {
 		var info *Info
 		if info, err = live.GetInfo(); err == nil {
@@ -161,7 +180,7 @@ func New(url *url.URL, cache gcache.Cache, opts ...Option) (live Live, err error
 
 	// when room initializaion is failed
 	live, err = InitializingLiveBuilderInstance.Build(live, url, opts...)
-	live = newWrappedLive(live, cache)
+	live = newWrappedLive(live, cache, opts1)
 	live.GetInfo() // dummy call to initialize cache inside wrappedLive
 	return
 }

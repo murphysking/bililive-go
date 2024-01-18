@@ -149,6 +149,14 @@ func (p *Parser) ParseLiveStream(ctx context.Context, url *url.URL, live live.Li
 		"-c", "copy",
 		"-bsf:a", "aac_adtstoasc",
 	}
+	opts := live.GetOptions()
+	if opts.NewHevc {
+		args = append(args, "-f", "mpegts")
+	}
+	info, err := live.GetInfo()
+	if info.AudioOnly {
+		args = append(args, "-vn")
+	}
 	for k, v := range headers {
 		if k == "User-Agent" || k == "Referer" {
 			continue

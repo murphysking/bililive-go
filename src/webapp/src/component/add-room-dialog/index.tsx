@@ -1,4 +1,4 @@
-import { Modal, Input } from 'antd';
+import { Modal, Input,Checkbox } from 'antd';
 import React from 'react';
 import API from '../../utils/api';
 
@@ -13,7 +13,9 @@ class AddRoomDialog extends React.Component<Props> {
         ModalText: '请输入直播间的URL地址',
         visible: false,
         confirmLoading: false,
-        textView: ''
+        textView: '',
+        //实验性功能
+        newhevc:false//使用新hevc流处理方法
     };
 
     showModal = () => {
@@ -30,14 +32,15 @@ class AddRoomDialog extends React.Component<Props> {
             confirmLoading: true,
         });
 
-        api.addNewRoom(this.state.textView)
+        api.addNewRoom(this.state.textView,this.state.newhevc)
             .then((rsp) => {
                 // 保存设置
                 api.saveSettingsInBackground();
                 this.setState({
                     visible: false,
                     confirmLoading: false,
-                    textView:''
+                    textView:'',
+					newhevc:false
                 });
                 this.props.refresh();
             })
@@ -46,7 +49,8 @@ class AddRoomDialog extends React.Component<Props> {
                 this.setState({
                     visible: false,
                     confirmLoading: false,
-                    textView:''
+                    textView:'',
+					newhevc:false
                 });
             })
     };
@@ -64,8 +68,14 @@ class AddRoomDialog extends React.Component<Props> {
         })
     }
 
+	newhevcOnChange = (e:any) => {
+		this.setState({
+			newhevc:e.target.checked
+		})
+	  };
+
     render() {
-        const { visible, confirmLoading, ModalText,textView } = this.state;
+        const { visible, confirmLoading, ModalText,textView,newhevc } = this.state;
         return (
             <div>
                 <Modal
@@ -76,6 +86,8 @@ class AddRoomDialog extends React.Component<Props> {
                     onCancel={this.handleCancel}>
                     <p>{ModalText}</p>
                     <Input size="large" value={textView} placeholder="https://" onChange={this.textChange} />
+					<br/>
+					<Checkbox style={{marginTop:"5px"}} onChange={this.newhevcOnChange} value={newhevc}>新hevc流处理方法(<label style={{color:"red"}}>实验性功能，目前仅在YY直播下测试通过</label>)</Checkbox>
                 </Modal>
             </div>
         );

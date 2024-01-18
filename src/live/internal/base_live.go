@@ -55,3 +55,6 @@ func (a *BaseLive) SetLastStartTime(time time.Time) {
 func (a *BaseLive) GetHeadersForDownloader() map[string]string {
 	return make(map[string]string)
 }
+func (a *BaseLive) GetOptions() *live.Options {
+	return a.Options
+}

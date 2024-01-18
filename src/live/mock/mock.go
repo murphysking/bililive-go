@@ -58,6 +58,12 @@ func (m *MockLive) GetInfo() (*live.Info, error) {
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
+func (m *MockLive) GetOptions() (*live.Options) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetOptions")
+	ret0, _ := ret[0].(*live.Options)
+	return ret0
+}
 
 // GetInfo indicates an expected call of GetInfo.
 func (mr *MockLiveMockRecorder) GetInfo() *gomock.Call {

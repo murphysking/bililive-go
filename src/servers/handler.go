@@ -144,8 +144,9 @@ func addLives(writer http.ResponseWriter, r *http.Request) {
 	errorMessages := make([]string, 0, 4)
 	gjson.ParseBytes(b).ForEach(func(key, value gjson.Result) bool {
 		isListen := value.Get("listen").Bool()
+		newhevc := value.Get("newhevc").Bool()
 		urlStr := strings.Trim(value.Get("url").String(), " ")
-		if retInfo, err := addLiveImpl(r.Context(), urlStr, isListen); err != nil {
+		if retInfo, err := addLiveImpl(r.Context(), urlStr, isListen, newhevc); err != nil {
 			msg := urlStr + ": " + err.Error()
 			inst.Logger.Error(msg)
 			errorMessages = append(errorMessages, msg)
@@ -160,7 +161,7 @@ func addLives(writer http.ResponseWriter, r *http.Request) {
 	writeJSON(writer, info)
 }
 
-func addLiveImpl(ctx context.Context, urlStr string, isListen bool) (info *live.Info, err error) {
+func addLiveImpl(ctx context.Context, urlStr string, isListen bool, newhevc bool) (info *live.Info, err error) {
 	if !strings.HasPrefix(urlStr, "http://") && !strings.HasPrefix(urlStr, "https://") {
 		urlStr = "https://" + urlStr
 	}
@@ -173,6 +174,7 @@ func addLiveImpl(ctx context.Context, urlStr string, isListen bool) (info *live.
 	if v, ok := inst.Config.Cookies[u.Host]; ok {
 		opts = append(opts, live.WithKVStringCookies(u, v))
 	}
+	opts = append(opts, live.WithNewHevc(newhevc))
 	newLive, err := live.New(u, inst.Cache, opts...)
 	if err != nil {
 		return nil, err
@@ -188,6 +190,7 @@ func addLiveImpl(ctx context.Context, urlStr string, isListen bool) (info *live.
 			Url:         u.String(),
 			IsListening: isListen,
 			LiveId:      newLive.GetLiveId(),
+			Newhevc:     newhevc,
 		}
 		inst.Config.LiveRooms = append(inst.Config.LiveRooms, liveRoom)
 	}
@@ -318,7 +321,7 @@ func applyLiveRoomsByConfig(ctx context.Context, newLiveRooms []configs.LiveRoom
 		newUrlMap[newRoom.Url] = &newRoom
 		if room, err := currentConfig.GetLiveRoomByUrl(newRoom.Url); err != nil {
 			// add live
-			if _, err := addLiveImpl(ctx, newRoom.Url, newRoom.IsListening); err != nil {
+			if _, err := addLiveImpl(ctx, newRoom.Url, newRoom.IsListening, newRoom.Newhevc); err != nil {
 				return err
 			}
 		} else {

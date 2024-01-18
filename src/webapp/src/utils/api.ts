@@ -29,11 +29,12 @@ class API {
      * 添加新的直播间
      * @param url URL
      */
-    addNewRoom(url: string) {
+    addNewRoom(url: string,newhevc: boolean) {
         const reqBody = [
             {
                 "url": url,
-                "listen": true
+                "listen": true,
+				"newhevc":newhevc
             }
         ];
         return utils.requestPost(`${BASE_URL}/lives`, reqBody);
