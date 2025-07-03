@@ -154,6 +154,11 @@ class LiveList extends React.Component<Props, IState> {
 
     columns = [
         {
+            title: '序号',
+            dataIndex: 'index',
+            render: (text:string, record:ItemData, index:number) => index + 1
+        },
+        {
             title: '主播名称',
             dataIndex: 'name',
             key: 'name',
