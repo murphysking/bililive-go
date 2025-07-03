@@ -168,7 +168,7 @@ func (c *Config) Verify() error {
 		return fmt.Errorf("the interval can not <= 0")
 	}
 	if _, err := os.Stat(c.OutPutPath); err != nil {
-		return fmt.Errorf(`the out put path: "%s" is not exist,error message is `, c.OutPutPath, err.Error())
+		return fmt.Errorf(`the out put path: "%s" is not exist,error message is "%s"`, c.OutPutPath, err.Error())
 	}
 	if maxDur := c.VideoSplitStrategies.MaxDuration; maxDur > 0 && maxDur < time.Minute {
 		return fmt.Errorf("the minimum value of max_duration is one minute")
